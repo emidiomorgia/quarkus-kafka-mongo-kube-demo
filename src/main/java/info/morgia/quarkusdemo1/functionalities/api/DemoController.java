@@ -84,7 +84,7 @@ public class DemoController {
     }
 
     @GET
-    @Path("/uni-demo3")
+    @Path("/uni-demo4")
     @Produces(MediaType.APPLICATION_JSON)
     public Uni<Response> getDemo4() {
 

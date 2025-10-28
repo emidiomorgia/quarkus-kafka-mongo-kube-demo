@@ -47,6 +47,7 @@ public class FunctionalitiesController {
     public Uni<Response> saveFunctionality(FunctionalityPostRequestDto request){
         return functionalityService.saveFunctionality(request)
                 .onItem()
+
                 .transform(result -> {
                     var uri = UriBuilder.fromUri(uriInfo.getAbsolutePath())
                             .path(result.id()) // supponendo savedDto.id sia la chiave

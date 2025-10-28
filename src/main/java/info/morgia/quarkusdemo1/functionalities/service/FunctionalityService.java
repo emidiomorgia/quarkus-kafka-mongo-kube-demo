@@ -45,10 +45,8 @@ public class FunctionalityService {
         Functionalities entity = functionalitiesMapper.toEntity(functionality);
         return functionalitiesRepository
                 .persist(entity)
-                .replaceWith(entity)
-                .onItem().transform(e -> {
-                    return functionalitiesMapper.toResponseDto(e);
-                });
+                .chain(() -> Uni.createFrom().item(entity))
+                .map(functionalitiesMapper::toResponseDto);
     }
 
 }
