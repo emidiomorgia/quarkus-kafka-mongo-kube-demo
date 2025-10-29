@@ -1,17 +1,24 @@
 package info.morgia.quarkusdemo1.functionalities.api;
 
-import com.arjuna.ats.internal.jdbc.drivers.modifiers.list;
+
 import info.morgia.quarkusdemo1.functionalities.clients.TodoClient;
+import info.morgia.quarkusdemo1.functionalities.dto.InsertNumberRequestDto;
 import info.morgia.quarkusdemo1.functionalities.dto.MyDto;
+import info.morgia.quarkusdemo1.functionalities.dto.NumberInsertedResult;
+//mport info.morgia.quarkusdemo1.functionalities.kafka.NumberInsertedProducer;
+import info.morgia.quarkusdemo1.functionalities.kafka.NumberInsertedProducer;
+import io.quarkus.logging.Log;
 import io.smallrye.mutiny.Uni;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.*;
-import lombok.SneakyThrows;
+
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -22,6 +29,13 @@ public class DemoController {
     @Inject
     @RestClient
     TodoClient todoClient;
+
+    @Context
+    UriInfo uriInfo;
+
+    @Inject
+    NumberInsertedProducer numberInsertedProducer;
+
 
     @GET
     @Path("/rest-client")
@@ -101,6 +115,18 @@ public class DemoController {
                 .map(l -> Response.ok(l).build());
     }
 
+    @POST
+    @Path("/insert-number")
+    public Response insertNumber(InsertNumberRequestDto request) {
+        numberInsertedProducer.send(new NumberInsertedResult(request.number(), Instant.now()));
+
+        var uri = UriBuilder.fromUri(uriInfo.getAbsolutePath())
+                .path(String.valueOf(request.number())) // supponendo savedDto.id sia la chiave
+                .build();
+
+        return Response.created(uri).entity(request.number()).build();
+    }
+
     private final ExecutorService cpuExecutor = Executors.newFixedThreadPool(
             Runtime.getRuntime().availableProcessors()
     );
@@ -112,7 +138,7 @@ public class DemoController {
         try {
             Thread.sleep(5000);
         } catch (InterruptedException e) {
-
+            Log.error("Error during sleep", e);
         }
 
         return (int) (sum % 1000);
@@ -124,7 +150,7 @@ public class DemoController {
         try {
             Thread.sleep(3000);
         } catch (InterruptedException e) {
-
+            Log.error("Error during sleep", e);
         }
 
         return res;
